@@ -66,7 +66,19 @@ function createReply(message, history) {
   if ((words.length <= 3 || normalizedMessage === 'yes' || normalizedMessage === 'no') && history.length > 1) {
     return 'I can take that further. Tell me which part you want to explore, and I’ll keep the answer focused.'
   }
-  return `Here’s the direct answer I can give from what you shared: I need a little more context to answer “${message}” reliably. Add the goal, the relevant details, or an example, and I’ll give you a specific answer rather than guess.`
+  if (normalizedMessage.startsWith('why ')) {
+    return `My best guess is that “${message.slice(4)}” is usually shaped by a combination of context, priorities, and the information available at the time. The most likely explanation is the simplest one that fits the facts, but I may be missing an important detail.`
+  }
+  if (normalizedMessage.startsWith('should i ') || normalizedMessage.startsWith('should we ')) {
+    return `My best answer is: probably yes if it moves you toward your main goal and the downside is manageable. Start with the smallest reversible step, check the result, and change course if the evidence says to.`
+  }
+  if (normalizedMessage.startsWith('how ') || normalizedMessage.startsWith('can i ')) {
+    return `My best answer is to begin with the simplest workable approach: define the result, take one small action, and improve it from what you learn. That is the most reliable path when the full situation is unclear.`
+  }
+  if (/^(is|are|do|does|can|will|would)\b/.test(normalizedMessage)) {
+    return `My best guess is yes, with an important condition: it depends on the specific context and evidence. Treat this as a starting answer, then verify the detail that matters most before acting.`
+  }
+  return `My best answer based on the wording is that the practical next step matters more than having a perfect theory. Start small, look at the result, and adjust. I’m making an educated guess here, so share more detail if you want me to sharpen it.`
 }
 
 function App() {
