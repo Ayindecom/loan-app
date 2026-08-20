@@ -1,93 +1,81 @@
 import { useState } from 'react'
 import './App.css'
 
-const activity = [
-  { merchant: 'Stone & Pine Market', date: 'Today, 10:42 AM', amount: '-$184.62', type: 'card', color: 'coral' },
-  { merchant: 'Direct deposit · Acme Inc.', date: 'Aug 15, 2026', amount: '+$12,450.00', type: 'deposit', color: 'mint' },
-  { merchant: 'Horizon Air 382', date: 'Aug 14, 2026', amount: '-$624.18', type: 'travel', color: 'gold' },
-  { merchant: 'Oak Street Properties', date: 'Aug 12, 2026', amount: '-$3,250.00', type: 'home', color: 'blue' },
+const starterPrompts = [
+  { icon: '✦', label: 'Help me think through a tough decision' },
+  { icon: '↗', label: 'Turn my notes into a clear plan' },
+  { icon: '⌁', label: 'Explain something in a simpler way' },
 ]
 
-const quickActions = [
-  { icon: '↗', label: 'Transfer money' },
-  { icon: '⌁', label: 'Pay bills' },
-  { icon: '+', label: 'Deposit check' },
-  { icon: '▣', label: 'View statements' },
+const capabilityCards = [
+  { number: '01', title: 'Think clearly', text: 'Break down complexity and find the next useful step.' },
+  { number: '02', title: 'Create freely', text: 'Shape rough ideas into words, plans, and possibilities.' },
+  { number: '03', title: 'Learn continuously', text: 'Stay curious, ask better questions, and keep moving.' },
 ]
 
 function App() {
-  const [activeTab, setActiveTab] = useState('Overview')
-  const [showNotice, setShowNotice] = useState(false)
+  const [activeTab, setActiveTab] = useState('Home')
+  const [message, setMessage] = useState('')
+  const [conversation, setConversation] = useState([])
 
-  const handleAction = (label) => {
-    setShowNotice(`${label} is ready when you are.`)
-    window.setTimeout(() => setShowNotice(false), 2800)
+  const submitMessage = (value = message) => {
+    const cleanMessage = value.trim()
+    if (!cleanMessage) return
+    setConversation((current) => [...current, { role: 'user', text: cleanMessage }])
+    setMessage('')
+    window.setTimeout(() => setConversation((current) => [...current, { role: 'ayinde', text: 'I’m here with you. Let’s take this one clear step at a time.' }]), 450)
   }
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-lockup">
-          <div className="chase-mark" aria-hidden="true"><span /><span /><span /><span /></div>
-          <span>Chase</span>
+          <div className="ayinde-mark" aria-hidden="true">A</div>
+          <span>AYINDE</span>
         </div>
         <nav className="main-nav" aria-label="Primary navigation">
-          {['Overview', 'Pay & transfer', 'Plan & learn'].map((tab) => (
+          {['Home', 'Conversations', 'Explore'].map((tab) => (
             <button key={tab} className={activeTab === tab ? 'nav-link active' : 'nav-link'} onClick={() => setActiveTab(tab)}>{tab}</button>
           ))}
         </nav>
         <div className="top-actions">
           <button className="icon-button" aria-label="Search">⌕</button>
-          <button className="icon-button" aria-label="Notifications">♧<i /></button>
-          <div className="avatar">DR</div>
+          <button className="new-chat" onClick={() => setConversation([])}>New conversation <span>+</span></button>
+          <div className="avatar">Y</div>
         </div>
       </header>
 
       <main className="dashboard">
         <div className="welcome-row">
           <div>
-            <p className="overline">{activeTab}</p>
-            <h1>Good morning, Donnie Reynold</h1>
+            <p className="overline">{activeTab} <span className="live-dot" /></p>
+            <h1>Good morning. What’s on your mind?</h1>
           </div>
-          <button className="help-link" onClick={() => handleAction('Your secure message center')}>Need help? <span>→</span></button>
+          <span className="date-label">Thursday, August 20</span>
         </div>
 
-        <section className="balance-hero">
-          <div className="balance-copy">
-            <div className="account-label"><span className="status-dot" /> Premier Checking <span className="account-number">•••• 4821</span></div>
-            <p className="balance-label">Available balance</p>
-            <div className="balance">$2,000,000<span>.00</span></div>
-            <p className="balance-note">Updated just now <span>•</span> Primary account</p>
-            <button className="balance-action" onClick={() => handleAction('Account details')}>Account details <span>→</span></button>
+        <section className="hero-panel">
+          <div className="hero-copy">
+            <span className="eyebrow">Your intelligent companion</span>
+            <h2>Bring your thoughts.<br /><em>Leave with clarity.</em></h2>
+            <p>AYINDE is here to help you understand, create, and solve — with patience, honesty, and a little spark.</p>
           </div>
-          <div className="balance-art" aria-hidden="true">
-            <div className="ring ring-one" /><div className="ring ring-two" /><div className="art-line" />
-            <span className="art-caption">Your money,<br />moving forward.</span>
-          </div>
+          <div className="hero-orbit" aria-hidden="true"><span className="orbit-core">✦</span><i /><i /><i /></div>
         </section>
 
-        <section className="quick-actions" aria-label="Quick actions">
-          {quickActions.map((action) => <button key={action.label} onClick={() => handleAction(action.label)}><span className="action-icon">{action.icon}</span><span>{action.label}</span><b>→</b></button>)}
+        <section className="conversation-panel">
+          <div className="conversation-heading"><div><p className="overline">Start here</p><h2>A conversation with AYINDE</h2></div><span className="secure-label">● Private by design</span></div>
+          {conversation.length > 0 && <div className="conversation-list">{conversation.map((item, index) => <div className={`message ${item.role}`} key={`${item.role}-${index}`}><span className="message-label">{item.role === 'ayinde' ? 'AYINDE' : 'YOU'}</span><p>{item.text}</p></div>)}</div>}
+          <form className="composer" onSubmit={(event) => { event.preventDefault(); submitMessage() }}>
+            <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask AYINDE anything..." aria-label="Message AYINDE" />
+            <button type="submit" aria-label="Send message">↑</button>
+          </form>
+          <div className="starter-row">{starterPrompts.map((prompt) => <button key={prompt.label} onClick={() => submitMessage(prompt.label)}><span>{prompt.icon}</span>{prompt.label}</button>)}</div>
         </section>
 
-        <div className="content-grid">
-          <section className="panel activity-panel">
-            <div className="panel-heading"><div><p className="overline">Your money</p><h2>Recent activity</h2></div><button className="text-button" onClick={() => handleAction('All transactions')}>See all <span>→</span></button></div>
-            <div className="activity-list">
-              {activity.map((item) => <div className="activity-row" key={item.merchant}><div className={`activity-icon ${item.color}`}>{item.type === 'deposit' ? '↓' : item.type === 'travel' ? '✈' : item.type === 'home' ? '⌂' : '◈'}</div><div className="activity-info"><strong>{item.merchant}</strong><span>{item.date}</span></div><strong className={item.amount.startsWith('+') ? 'positive activity-amount' : 'activity-amount'}>{item.amount}</strong></div>)}
-            </div>
-          </section>
-
-          <aside className="side-column">
-            <section className="panel snapshot-panel"><div className="panel-heading"><div><p className="overline">At a glance</p><h2>Money snapshot</h2></div><span className="more">•••</span></div><div className="snapshot-item"><span>Monthly spending</span><strong>$8,426.18</strong><div className="progress"><i /></div><small>18% less than last month</small></div><div className="snapshot-item"><span>Net worth</span><strong>$2,486,920.00</strong><small className="positive">↑ 6.4% this year</small></div></section>
-            <section className="panel insight-panel"><div className="insight-icon">✦</div><p className="overline">A little insight</p><h3>Your cash is working hard.</h3><p>Move extra cash into a Chase investment account and keep your goals in motion.</p><button onClick={() => handleAction('Investment options')}>Explore investing <span>→</span></button></section>
-          </aside>
-        </div>
-
-        <section className="security-banner"><div className="shield">✓</div><div><strong>You’re in control of your security</strong><span>Last sign-in: Today at 9:18 AM from Chrome on Windows</span></div><button onClick={() => handleAction('Security center')}>Security center <span>→</span></button></section>
+        <section className="capability-section"><div className="section-heading"><p className="overline">Built for the whole you</p><h2>More than answers.</h2></div><div className="capability-grid">{capabilityCards.map((card) => <article key={card.number}><span>{card.number}</span><h3>{card.title}</h3><p>{card.text}</p><b>↗</b></article>)}</div></section>
       </main>
-      <footer><span>© 2026 JPMorgan Chase Bank, N.A.</span><div><a href="#privacy">Privacy</a><a href="#security">Security</a><a href="#contact">Contact us</a></div><span className="fdic">Member FDIC <b>Equal Housing Lender</b></span></footer>
-      {showNotice && <div className="toast" role="status">{showNotice}<button onClick={() => setShowNotice(false)}>×</button></div>}
+      <footer><span>© 2026 AYINDE</span><div><a href="#about">About</a><a href="#privacy">Privacy</a><a href="#contact">Contact</a></div><span className="footer-note">Smart. Reliable. Always ready.</span></footer>
     </div>
   )
 }
