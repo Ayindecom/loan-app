@@ -13,25 +13,60 @@ const capabilityCards = [
   { number: '03', title: 'Learn continuously', text: 'Stay curious, ask better questions, and keep moving.' },
 ]
 
-function createReply(message) {
-  const normalizedMessage = message.toLowerCase()
+function createReply(message, history) {
+  const normalizedMessage = message.toLowerCase().trim()
+  const words = normalizedMessage.split(/\s+/)
+  const calculation = normalizedMessage.match(/(?:what is|calculate)\s*(-?\d+(?:\.\d+)?)\s*([+\-*x×÷/]?)\s*(-?\d+(?:\.\d+)?)/i)
+  const definitions = {
+    photosynthesis: 'Photosynthesis is how plants use sunlight, water, and carbon dioxide to make food. It releases oxygen as a by-product.',
+    'artificial intelligence': 'Artificial intelligence is software that learns patterns from data and uses them to perform tasks such as understanding language, recognizing images, or making predictions.',
+    ai: 'AI, or artificial intelligence, is software that learns patterns from data and uses them to perform tasks such as understanding language, recognizing images, or making predictions.',
+    algorithm: 'An algorithm is a precise set of steps for solving a problem or completing a task. A recipe is a simple everyday example.',
+    api: 'An API is a set of rules that lets one piece of software request data or actions from another piece of software.',
+    blockchain: 'A blockchain is a shared digital record that stores transactions in linked groups called blocks. Its design makes past records difficult to change without detection.',
+  }
 
+  if (calculation && calculation[2]) {
+    const [, first, operator, second] = calculation
+    const left = Number(first)
+    const right = Number(second)
+    const operations = { '+': left + right, '-': left - right, '*': left * right, x: left * right, '×': left * right, '/': right ? left / right : null, '÷': right ? left / right : null }
+    const result = operations[operator]
+    return result === null ? 'That calculation is undefined because division by zero is not possible.' : `The answer is ${Number.isInteger(result) ? result : result.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}.`
+  }
+  if (/\b(hi|hello|hey|good morning|good evening)\b/.test(normalizedMessage)) {
+    return 'Hello. I’m AYINDE, and I’m ready to help. Ask me a question, give me a task, or share something you are working through.'
+  }
+  if (normalizedMessage.includes('who are you') || normalizedMessage.includes('what are you')) {
+    return 'I’m AYINDE, an intelligent assistant for thinking, creating, learning, and solving problems. I aim to be useful and honest, so I’ll say when I need more information.'
+  }
+  if (normalizedMessage.includes('what is ayinde') || normalizedMessage.includes('who is ayinde')) {
+    return 'AYINDE is an intelligent, reliable, and creative AI companion designed to make technology easier and more useful. I can help you understand, create, plan, and solve.'
+  }
   if (normalizedMessage.includes('plan') || normalizedMessage.includes('day') || normalizedMessage.includes('schedule')) {
-    return 'Absolutely. Start with one priority, then group the smaller tasks around it. What must be done today, what would be helpful, and what can wait?'
+    return 'Start with one priority that would make today feel successful. Put it first, then add two smaller tasks, a realistic break, and a clear stopping time. Everything else can wait or move to tomorrow.'
   }
   if (normalizedMessage.includes('decid') || normalizedMessage.includes('choose') || normalizedMessage.includes('tough')) {
-    return 'Let’s make the decision easier to see. Name the options, the outcome you care about most, and the biggest risk of each choice. I can help you compare them without rushing.'
+    return 'Use this quick filter: which option best serves your main goal, what is the worst realistic downside, and which choice keeps the most doors open? If the options are close, choose the one you can learn from fastest.'
   }
   if (normalizedMessage.includes('write') || normalizedMessage.includes('note') || normalizedMessage.includes('email')) {
-    return 'I can help shape that into something clear. Share the notes or the main point you want the reader to remember, and I’ll help turn it into a concise draft.'
+    return 'Here is a simple structure: state the purpose in the first sentence, give only the context the reader needs, make the requested action explicit, and close with a warm, specific next step. Share your rough notes and I’ll draft it.'
   }
-  if (normalizedMessage.includes('explain') || normalizedMessage.includes('simple') || normalizedMessage.includes('understand')) {
-    return 'Of course. Send me the idea, phrase, or topic and I’ll explain it plainly, then give you an example so it feels practical.'
+  if (normalizedMessage.includes('explain') || normalizedMessage.includes('simple') || normalizedMessage.includes('understand') || normalizedMessage.startsWith('what is ')) {
+    const subject = message.replace(/^(can you |please )?(explain|what is)\s+/i, '').replace(/[?!.]+$/, '')
+    const definition = definitions[subject.toLowerCase()]
+    return definition || `I don’t have a reliable definition for “${subject}” yet. Tell me where you encountered it or share the sentence around it, and I’ll explain it accurately instead of guessing.`
   }
-  if (/\b(hi|hello|hey)\b/.test(normalizedMessage)) {
-    return 'Hello. I’m ready when you are. We can solve a problem, explore an idea, or simply make something feel clearer.'
+  if (normalizedMessage.includes('how do i') || normalizedMessage.includes('how can i') || normalizedMessage.includes('help me')) {
+    return 'Break it into the smallest useful next action, do that first, then check the result before adding more complexity. Tell me your goal and what is blocking you, and I’ll give you a practical step-by-step answer.'
   }
-  return `I hear you. The best next step is to make the goal more specific: what would a useful outcome look like for “${message}”? I can help you work toward it.`
+  if (normalizedMessage.includes('thank')) {
+    return 'You’re welcome. I’m glad that helped. Send the next question whenever you’re ready.'
+  }
+  if ((words.length <= 3 || normalizedMessage === 'yes' || normalizedMessage === 'no') && history.length > 1) {
+    return 'I can take that further. Tell me which part you want to explore, and I’ll keep the answer focused.'
+  }
+  return `Here’s the direct answer I can give from what you shared: I need a little more context to answer “${message}” reliably. Add the goal, the relevant details, or an example, and I’ll give you a specific answer rather than guess.`
 }
 
 function App() {
@@ -47,7 +82,7 @@ function App() {
     setMessage('')
     setIsResponding(true)
     window.setTimeout(() => {
-      setConversation((current) => [...current, { role: 'ayinde', text: createReply(cleanMessage) }])
+      setConversation((current) => [...current, { role: 'ayinde', text: createReply(cleanMessage, current) }])
       setIsResponding(false)
     }, 450)
   }
@@ -91,7 +126,7 @@ function App() {
 
         <section className="conversation-panel">
           <div className="conversation-heading"><div><p className="overline">Start here</p><h2>A conversation with AYINDE</h2></div><span className="secure-label">● Private by design</span></div>
-          {(conversation.length > 0 || isResponding) && <div className="conversation-list">{conversation.map((item, index) => <div className={`message ${item.role}`} key={`${item.role}-${index}`}><span className="message-label">{item.role === 'ayinde' ? 'AYINDE' : 'YOU'}</span><p>{item.text}</p></div>)}{isResponding && <div className="message ayinde responding"><span className="message-label">AYINDE</span><p>Thinking through that<span className="typing-dots">...</span></p></div>}</div>}
+          {(conversation.length > 0 || isResponding) && <div className="conversation-list" aria-live="polite">{conversation.map((item, index) => <div className={`message ${item.role}`} key={`${item.role}-${index}`}><span className="message-label">{item.role === 'ayinde' ? 'AYINDE' : 'YOU'}</span><p>{item.text}</p></div>)}{isResponding && <div className="message ayinde responding"><span className="message-label">AYINDE</span><p>Thinking through that<span className="typing-dots">...</span></p></div>}</div>}
           <form className="composer" onSubmit={(event) => { event.preventDefault(); submitMessage() }}>
             <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask AYINDE anything..." aria-label="Message AYINDE" />
             <button type="submit" aria-label="Send message" disabled={isResponding || !message.trim()}>↑</button>
