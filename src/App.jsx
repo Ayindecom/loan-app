@@ -13,17 +13,43 @@ const capabilityCards = [
   { number: '03', title: 'Learn continuously', text: 'Stay curious, ask better questions, and keep moving.' },
 ]
 
+function createReply(message) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('plan') || normalizedMessage.includes('day') || normalizedMessage.includes('schedule')) {
+    return 'Absolutely. Start with one priority, then group the smaller tasks around it. What must be done today, what would be helpful, and what can wait?'
+  }
+  if (normalizedMessage.includes('decid') || normalizedMessage.includes('choose') || normalizedMessage.includes('tough')) {
+    return 'Let’s make the decision easier to see. Name the options, the outcome you care about most, and the biggest risk of each choice. I can help you compare them without rushing.'
+  }
+  if (normalizedMessage.includes('write') || normalizedMessage.includes('note') || normalizedMessage.includes('email')) {
+    return 'I can help shape that into something clear. Share the notes or the main point you want the reader to remember, and I’ll help turn it into a concise draft.'
+  }
+  if (normalizedMessage.includes('explain') || normalizedMessage.includes('simple') || normalizedMessage.includes('understand')) {
+    return 'Of course. Send me the idea, phrase, or topic and I’ll explain it plainly, then give you an example so it feels practical.'
+  }
+  if (/\b(hi|hello|hey)\b/.test(normalizedMessage)) {
+    return 'Hello. I’m ready when you are. We can solve a problem, explore an idea, or simply make something feel clearer.'
+  }
+  return `I hear you. The best next step is to make the goal more specific: what would a useful outcome look like for “${message}”? I can help you work toward it.`
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('Home')
   const [message, setMessage] = useState('')
   const [conversation, setConversation] = useState([])
+  const [isResponding, setIsResponding] = useState(false)
 
   const submitMessage = (value = message) => {
     const cleanMessage = value.trim()
     if (!cleanMessage) return
     setConversation((current) => [...current, { role: 'user', text: cleanMessage }])
     setMessage('')
-    window.setTimeout(() => setConversation((current) => [...current, { role: 'ayinde', text: 'I’m here with you. Let’s take this one clear step at a time.' }]), 450)
+    setIsResponding(true)
+    window.setTimeout(() => {
+      setConversation((current) => [...current, { role: 'ayinde', text: createReply(cleanMessage) }])
+      setIsResponding(false)
+    }, 450)
   }
 
   return (
@@ -65,10 +91,10 @@ function App() {
 
         <section className="conversation-panel">
           <div className="conversation-heading"><div><p className="overline">Start here</p><h2>A conversation with AYINDE</h2></div><span className="secure-label">● Private by design</span></div>
-          {conversation.length > 0 && <div className="conversation-list">{conversation.map((item, index) => <div className={`message ${item.role}`} key={`${item.role}-${index}`}><span className="message-label">{item.role === 'ayinde' ? 'AYINDE' : 'YOU'}</span><p>{item.text}</p></div>)}</div>}
+          {(conversation.length > 0 || isResponding) && <div className="conversation-list">{conversation.map((item, index) => <div className={`message ${item.role}`} key={`${item.role}-${index}`}><span className="message-label">{item.role === 'ayinde' ? 'AYINDE' : 'YOU'}</span><p>{item.text}</p></div>)}{isResponding && <div className="message ayinde responding"><span className="message-label">AYINDE</span><p>Thinking through that<span className="typing-dots">...</span></p></div>}</div>}
           <form className="composer" onSubmit={(event) => { event.preventDefault(); submitMessage() }}>
             <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask AYINDE anything..." aria-label="Message AYINDE" />
-            <button type="submit" aria-label="Send message">↑</button>
+            <button type="submit" aria-label="Send message" disabled={isResponding || !message.trim()}>↑</button>
           </form>
           <div className="starter-row">{starterPrompts.map((prompt) => <button key={prompt.label} onClick={() => submitMessage(prompt.label)}><span>{prompt.icon}</span>{prompt.label}</button>)}</div>
         </section>
